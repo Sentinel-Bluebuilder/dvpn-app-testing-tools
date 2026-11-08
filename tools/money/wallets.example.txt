@@ -1,0 +1,6 @@
+# Wallet list for sol-topup.sh, reclaim-list.sh and books.sh. One wallet per line:
+#   <pubkey> <min_sol> <target_sol> <min_tdvpn> <target_tdvpn> <label>
+# A wallet under a minimum is topped up to its target. Lines starting with # are ignored.
+# The real list lives outside the repo (WALLET_LIST). These pubkeys are placeholders.
+<pubkey-a> 0.10 0.30 2 6 linux-lane-a
+<pubkey-b> 0.10 0.30 2 6 windows-lane-a

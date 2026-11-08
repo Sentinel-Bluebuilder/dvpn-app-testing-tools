@@ -1,0 +1,7 @@
+memory/
+*.env
+!*.example.env
+*.key
+*.json.key
+wallets/
+node_modules/
