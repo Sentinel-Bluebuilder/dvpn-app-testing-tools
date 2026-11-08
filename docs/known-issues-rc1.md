@@ -17,7 +17,7 @@ proof.
 | Node metering | A WireGuard peer's traffic while the node service was down was lost from metering. | Counters are read before the leftover interface is removed. |
 | Orphan tunnel | After the service was killed, a tunnel could stay up with status "none". | Cleaned on the next start. |
 | Device wallet | No way to empty a device wallet. | New `key sweep` command. |
-| Settings (all apps) | With an http blockchain endpoint stored (test networks), every `daemon set` failed, so the kill switch could not be turned on from the CLI. | The stored endpoint is carried through; the https rule applies only to a newly typed endpoint. Fixed in the macOS and Linux RC1 builds. Windows: see its build note. Android: fixed after RC1, so not in it. |
+| Settings (all apps) | With an http blockchain endpoint stored (test networks), every `daemon set` failed, so the kill switch could not be turned on from the CLI. | The stored endpoint is carried through; the https rule applies only to a newly typed endpoint. Fixed in the macOS and Linux RC1 builds. Windows: fixed in RC1. Android: fixed after RC1, so not in it. |
 
 ## 2. Windows app: fixed earlier, final proof run pending
 
