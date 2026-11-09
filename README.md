@@ -28,7 +28,7 @@ Results: [`docs/04-results.md`](docs/04-results.md). Known problems:
 
 | Product | Final release |
 |---|---|
-| Windows app | [`sentinel-solana-dvpn-windows` 0.2.0](https://github.com/Sentinel-Bluebuilder/sentinel-solana-dvpn-windows/releases/latest) |
+| Windows app | [`sentinel-solana-dvpn-windows` 0.2.1](https://github.com/Sentinel-Bluebuilder/sentinel-solana-dvpn-windows/releases/latest) |
 | macOS app | [`sentinel-solana-dvpn-macos` 0.1.3](https://github.com/Sentinel-Bluebuilder/sentinel-solana-dvpn-macos/releases/latest) |
 | Linux app | [`sentinel-solana-dvpn-linux` 0.1.21](https://github.com/Sentinel-Bluebuilder/sentinel-solana-dvpn-linux/releases/latest) |
 | Android app | [`sentinel-solana-dvpn-android` 0.1.4](https://github.com/Sentinel-Bluebuilder/sentinel-solana-dvpn-android/releases/latest) |

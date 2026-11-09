@@ -1,6 +1,6 @@
 # Known issues: final release (and the release candidates before it)
 
-**Final release (2026-11-09):** the Windows (0.2.0), macOS (0.1.3), Linux (0.1.21) and Android (0.1.4) apps run on fork
+**Final release (2026-11-09):** the Windows (0.2.0, patched by 0.2.1), macOS (0.1.3), Linux (0.1.21) and Android (0.1.4) apps run on fork
 cut final6.5; the node tools keep their tested final6.1 builds. What each platform proved on the final build, and what
 is still open, is in section 3b. Sections 1 to 3 are the record from the release candidates. (The file keeps its
 original name so existing links keep working.)
@@ -75,6 +75,7 @@ platform; each stays on this list until that run is graded):
 | Linux (app 0.1.21) | S1 smoke 54/54 on Ubuntu 22 x64, 54/54 on Ubuntu 24 arm64, 54 PASS + 1 WARN on Fedora 44 (kill switch off, an edge packet, by design); S3 cut90 6/6; cut90_ks 18/18 on rerun; 30-minute WireGuard soak 173 samples, 0 false "Reconnecting" | Q0445, Q0480 |
 | Android (app 0.1.4) | S1 core 42/42, S3 cut90 36/36, cut90_ks 42/42 result rows, 0 FAIL or SKIP; 30-minute WireGuard soak 173 samples, 0 off-tunnel, memory flat | Q0445, Q0480; "Android, status: active about 1 s before traffic" (section 3): 0 status failures on the final build |
 | Windows (app 0.2.0, x64) | Clean install of the final installer: S1 12 cells (core + core_ks x 6 protocols) 84 PASS / 5 WARN (kill switch off, edge packets) / 0 FAIL; 30-minute WireGuard soak 131 samples, 0 false "Reconnecting"; kill switch held across a service restart with a stored http endpoint; data-dead node (Q0369): connect fails in 16 s with a plain message, nothing left behind | Q0469, Q0480, Q0478, Q0369; elevated service steps refused the service name `sentinel-dvpnd$c0` (fixed in 0.2.0) |
+| Windows (app 0.2.1, x64; same daemon) | Upgrade over 0.2.0 and clean install; `daemon install --yes` twice in a row succeeds; S1 12 cells 84 PASS / 5 WARN (kill switch off, edge packets) / 0 FAIL; data-dead node: the app CLI and the session list show plain words only, the raw text stays in the app log | reinstall error 1378, Q0369 wording |
 
 | macOS (app 0.1.3, x64) | S1 core 6/6 protocols, 0 dishonest status, leak PASS 6/6, throughput 6/6; S3 cut90_ks 6/6, 0 dishonest status, no outbound packet outside the tunnel, recovery seen, nothing left behind; 30-minute WireGuard soak "Protected" throughout, 0 blips | Q0459 (the earlier wrong-status samples came from a test-rig clock that stepped backward; on a wall clock: 0), Q0480, Q0468 |
 
@@ -83,8 +84,8 @@ platform; each stays on this list until that run is graded):
 | Area | What a user may see | State |
 |---|---|---|
 | Status after a long cut | After a 90 s network cut on OpenVPN, V2Ray and Xray, the status call did not answer for about 100 s after the reconnect phase (seen on one test box with a swapped-in daemon). No leak and no wrong status. | Unattributed (product or that box); re-run on a clean install planned. |
-| Reinstall / repair | Running `daemon install --yes` a second time, when the user is already in the `sentinel-dvpn` group, fails with "System error 1378". A first install works. | Fix found and proven on a test machine; it ships in the next build. |
-| Error wording | A failed connect appends raw `dial tcp ... connectex` text after the plain sentence, and status then reads "stopped by user". | Wording fix planned. |
+| Reinstall / repair | Running `daemon install --yes` a second time, when the user is already in the `sentinel-dvpn` group, fails with "System error 1378". A first install works. | Fixed in 0.2.1 (proven on upgrade and on a clean install, two installs in a row). |
+| Error wording | A failed connect appends raw `dial tcp ... connectex` text after the plain sentence, and status then reads "stopped by user". | App fixed in 0.2.1: the connect error and the session list are plain words; the raw text stays in the app log. Still in the daemon (unchanged in 0.2.1): its own CLI `sentinel-dvpn.exe` prints the raw text, and it records such a session as "stopped by user" (the app shows "Disconnected."). |
 | arm64 | ARM64 installers had a smoke run only. | Full cells planned. |
 
 **By design (documented behaviour):** Kill switch and chain traffic: with the kill switch on, traffic to the configured
