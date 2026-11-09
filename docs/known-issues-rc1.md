@@ -13,11 +13,11 @@ proof.
 | Plain words | One "service not ready" message still ended in a raw gRPC error. | It is mapped to plain words. |
 | Windows CLI | `status` hung for over 5 s while the background service restarted. | Each connection attempt is capped at 1 s, then reports "service not running". |
 | Node, busy network | When the node's blockchain connection was rate-limited, a new session got "internal error". | The node answers "busy" with a retry time. |
-| Linux/Android speed | V2Ray was capped near 1.6 MB/s on Linux and Android. | The oversized socket buffer that Linux clamps is removed there. **Proven on Debian 12:** V2Ray 13–14 MB/s, the same as Xray. Fedora and Android still to measure. |
-| Node metering | A WireGuard peer's traffic while the node service was down was lost from metering. | Counters are read before the leftover interface is removed. |
+| Linux/Android speed | V2Ray was capped near 1.6 MB/s on Linux and Android. | The oversized socket buffer that Linux clamps is removed there. **Proven** on Debian 12 (V2Ray 13–14 MB/s, same as Xray), Fedora 44 (11–13 MB/s vs Xray 13) and Android (5.2–5.4 vs 5.1 MB/s). |
+| Node metering (**proven**: node 55,621 vs client 55,629 bytes on RC1; previous build 48,861 vs 55,680) | A WireGuard peer's traffic while the node service was down was lost from metering. | Counters are read before the leftover interface is removed. |
 | Orphan tunnel | After the service was killed, a tunnel could stay up with status "none". | Cleaned on the next start. |
 | Device wallet | No way to empty a device wallet. | New `key sweep` command. |
-| Settings (all apps) | With an http blockchain endpoint stored (test networks), every `daemon set` failed, so the kill switch could not be turned on from the CLI. | The stored endpoint is carried through; the https rule applies only to a newly typed endpoint. Fixed in the macOS and Linux RC1 builds. Windows: fixed in RC1. Android: fixed after RC1, so not in it. |
+| Settings (all apps) — first call sites **(a missed call site remains; see section 3)** | With an http blockchain endpoint stored (test networks), every `daemon set` failed, so the kill switch could not be turned on from the CLI. | The stored endpoint is carried through; the https rule applies only to a newly typed endpoint. Fixed in the macOS and Linux RC1 builds. Windows: fixed in RC1. Android: fixed after RC1, so not in it. |
 
 ## 2. Windows app: fixed earlier, final proof run pending
 
@@ -38,9 +38,12 @@ These were fixed in earlier builds and carry into RC1. Their last proof run was 
 
 ## 3. Open
 
+**Cleared since the first list:** the possible Linux/Android kill-switch leak after a service restart (internally Q0479) is **not a leak**. In 60 of 60 test cycles (kill switch on, persist, 1-second firewall/route/probe/packet-capture sampling) the block held across every restart. The direct probes seen earlier were the test rig's own safety job releasing the block on purpose, not the product.
+
+
 | Area | What a user may see | State |
 |---|---|---|
-| **Kill switch (Linux; Android shares the code)** | **Possible leak:** with the kill switch on, in 4 of 60 test cycles some traffic left directly for ~15 s after the background service restarted or a reconnect failed. | **High priority.** Not yet confirmed as a leak, because the firewall state wasn't sampled at those seconds. Re-measure with per-second firewall snapshots first; if confirmed, fix before the final release. Until then, don't rely on the kill switch across a service restart. |
+| Settings, kill switch (all apps) | A second config writer still rejected an http blockchain endpoint (test networks), so `daemon set --kill-switch on` failed on the RC1 macOS build. One call site was missed in the first fix. | Fix in progress for RC2 on all four apps; proof = the CLI turning the kill switch on with an http endpoint stored. |
 | Linux, OpenVPN | After the background service restarts, about 1 in 20 times a host route was left behind (Ubuntu 24.04). | 60-cycle proof run planned. |
 | macOS, kill switch | During a 90 s network cut, status honesty with the kill switch on still needs a clean re-measure. | Re-run planned on the RC1 build. |
 | Windows, stale tunnel | With a WireGuard tunnel left over from a crash, stopping the service was seen to hang for 15–19 min. | Being reproduced; if confirmed, it gets a fix. |
