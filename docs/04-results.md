@@ -8,7 +8,7 @@ Every number here is traced to a raw artifact on the controller (the test contro
 that artifact, not transcribed. Where a cell is owned by a platform tester's result file, it cites
 that file; a cell with no traced evidence is left `—`, not guessed.
 
-> **Status:** draft assembled from the graded record; numbers marked pending are refreshed by the release director at the end. Per-product binary hashes come from the build owners' SHA256SUMS.
+> **Status:** final release 2026-11-09. Section 2b and section 5b hold the graded final-build results and hashes; section 2 and section 5 are the release-candidate record (their "pending" cells are superseded by 2b and 5b). Per-product binary hashes come from the build owners' SHA256SUMS.
 
 ## 1. Legend
 
@@ -51,6 +51,36 @@ numbers at the end. Evidence for each cell is the raw result folder of that run,
 > hy2 cut90_ks field gap was an apparent 11s refuted by pcap to ~3-6s = Q0445 CANDIDATE (Q0472). Mac
 > KS-on cut `state=active egress=direct` = Q0459 not-a-leak + Q0464 (wrong teardown) HIGH. Windows suites
 > owned elsewhere. (Q0445's 2s guarantee is unit-enforced by the signed mutant regardless of field noise.)
+
+## 2b. RC3 column (final6.5, the last client cut) — filled at the end
+
+RC3 = fork cut final6.5 (final6.1 plus the status/stall fixes). Only the status/stall path changed, so RC3 re-runs
+only what that path touches: **S1 smoke, S3 cut90 + cut90_ks, and one 30-minute WireGuard soak** per platform
+(Windows and macOS: x64 as the main arch; arm64 gets S1 smoke only). Every other cell carries the RC2 result, and
+only if the carry-over check (final6.1..final6.5 diff, non-test files) shows the changed code only *reports* status
+and drives no teardown, redial, kill-switch, billing or route action. If it does drive one, RC3 also runs one S9
+50-cycle and the kill-switch cells. A cell is **PENDING-RC3** until its RC3 run is graded; **CARRIED** cells name
+their RC2 evidence folder (kept on the test controller, not published); see the cell marks below the table.
+
+| Suite | Linux | Windows | macOS | Android |
+|---|---|---|---|---|
+| S1 smoke (6 protocols; arm64 = smoke only) | PASS (final6.5, signed 2026-11-09: Ubuntu 22 x64 54/54, Ubuntu 24 arm64 54/54, Fedora 44 54 PASS + 1 WARN (ks=off edge packet, by design)) | PASS x64 (final 0.2.0 installer, clean install, signed 2026-11-09: 12 cells core + core_ks x 6 protocols, 84 PASS / 5 WARN (ks=off edge packets, by design) / 0 FAIL). arm64: smoke only, not separately graded at sign-off | PASS x64 (final 0.1.3 package, signed 2026-11-09: core 6/6 protocols, 0 dishonest status, leak PASS 6/6, throughput 6/6 (V2Ray 10.13 MB/s). Single status samples 1.0-1.6 s late (inside the 2 s rule, 2-vCPU nested guest). arm64: built, not run live | PASS (final6.5, signed 2026-11-09: core 42/42 PASS, 0 FAIL/SKIP) |
+| S1 core_ks | PENDING-RC3 (no RC2 S1 core_ks rows exist) | PASS x64 (final6.5: part of the 12 S1 cells above, 0 FAIL). Earlier: CARRIED-WITH-FAILS (RC2 x64 and arm64: 48 PASS / 5 WARN / 8 FAIL each; all 8 FAIL = money "node overcharging", a test-rig rule, reclassified, no real overcharge) | CARRIED-WITH-FAILS (RC2: leak-under-KS FAIL 6/6 = harness, Apple push traffic (APNs 17.57.x:5223) fell in the connect/stop edges outside the active window, 0 packets inside it; status-LIE rows = Q0459, fixed in final6.5, proof pending RC3) | UNVERIFIED (no readable RC2 evidence: the folder cited earlier does not exist; only older final6 evidence exists) |
+| S2 restart / teardown / words | CARRIED-WITH-FAILS (RC2: 92 PASS / 1 WARN / 4 FAIL; all 4 FAIL = one status sample `state=none` right after the daemon restart, boundary LIE, no leak; words 12/12 PASS) | PENDING-RC3 (the RC2 S2 runs have no readable results) | CARRIED-WITH-FAILS (RC2: S2 words 23/23 PASS (one hysteria2 daemon_term SKIP); 12 `daemon_term_persist`/`daemon_kill` leftovers FAIL = harness (the check ran before the reset), not a defect; 3 protocol_kill leak FAILs (wg, hy2, v2ray) OPEN, not decided: need `pfctl -a sentinel-dvpn-c0 -sr` and the session-end time in the cell) | UNVERIFIED (earlier "21 PASS / 2 SKIP" has no readable source) |
+| S3 cut90 | PASS (6/6) | PASS-WITH-CAVEAT x64 (binary-swap install, final6.5: 0 dishonest status, 0 leak; on OpenVPN, V2Ray and Xray the status call did not answer for about 100 s after the reconnect phase, unattributed: product or that test box) | NOT RUN on the final build (the final Mac pass ran cut90_ks only; cut90 carries the RC2 result) | PASS (36/36 rows) |
+| S3 cut90_ks | PASS (18/18 on rerun; the first run failed 4/6 on amneziawg + v2ray, a gate-tunnel gap right after a cut = harness) | PASS x64 (binary-swap install, final6.5: the AmneziaWG "leak" = 53 packets to the chain RPC, which the kill switch allows by design; WireGuard 1 status sample 1 s late at a boundary) | PASS x64 (final 0.1.3, 6/6 protocols: 0 dishonest status (Q0459 cleared: the earlier "lies" came from a test-rig clock that stepped backward), no outbound packet outside the tunnel, recovery seen, nothing left behind) | PASS (42/42 rows) |
+| S9 50-cycle soak | CARRIED-WITH-FAILS (RC2 `tlx-evidence/final61b-linux`, WireGuard: 11 PASS / 1 FAIL = one boundary status sample) | CARRIED-WITH-FAILS (RC2: x64 32/50, arm64 46/50. Verdict = HARNESS: the "5 s" cut really held the firewall rule ~22 s, longer than the daemon's reconnect budget, so the session ended as designed; "stopped by user" is the harness reading an older session; the x64 c35-c50 cascade = VM-wide network loss, not attributed to the product. No product fix; recovery from a cut is rechecked by RC3 S3 cut90) | CARRIED-WITH-FAILS (RC2: 49 PASS / 1 FAIL = cycle 16 hysteria2 connect, hy2 child exited status 1; memory and handles PASS; status-dishonest rows = Q0459, fixed in final6.5) | UNVERIFIED (earlier "50 cycles, 0 failed" has no readable RC2 source) |
+| 30-min soak (one, WireGuard) | PASS (173 samples, 173 active, 0 false "reconnecting"; the harness file verdict reads FAIL only because of its own channel-close step, not a daemon sample) | PASS x64 (final6.5: 131 samples, 0 reconnecting, 0 not-active, egress always via the node) | PASS x64 (final6.5: 30 min WireGuard, "Protected" at every logged tick, egress via the node 15/15, 0 blips, memory 39.9 to 44.3 MB, flattening) | PASS (173 samples, 0 off-tunnel, 0 slow; memory 86.9 to 89.9 MB flat, 17 file handles flat) |
+| Kill switch across a service restart (Q0468/Q0478) | CARRIED (RC2: block held 22/22 samples) | PASS x64 (final6.5 + the elevated-argument fix: the kill switch held across a service restart with a stored http endpoint) | CARRIED (RC2 Q0468 mac cell: PASS; setting reads back `persist`, anchor held 37 rules while connected, doctor "held by the running service") | UNVERIFIED |
+| Money (per protocol) | UNVERIFIED (no per-platform RC2 money record cited) | CARRIED-WITH-FAILS (the 8 "node overcharging" rows above, test-rig) | UNVERIFIED (money rows PENDING-REGRADE, harness has no owner key) | UNVERIFIED |
+| Node-side (busy answer, metering, V2Ray speed) | CARRIED (RC2 node-4 runs; per-run folder not cited here) | n/a | n/a | UNVERIFIED |
+
+Cell marks: **CARRIED** = RC2 result read from raw and clean. **CARRIED-WITH-FAILS** = RC2 result carried, but the RC2
+run had FAILs; each is listed with its class (harness / test-rig / open). **UNVERIFIED** = no readable RC2 evidence;
+the cell must be re-run or stays unproven. An UNVERIFIED or PENDING-RC3 cell is not a pass.
+
+RC3 numbers to enter (hash, pass counts, sample counts) are listed in the release checklist; none is entered here
+until graded.
 
 ## 3. Bug disposition (graded)
 
@@ -132,4 +162,23 @@ file only, so every binary is byte-identical.
 | Node Tester | stage build | — | final6.1 | e2e 117/1/1 (the 1 = a harness regex, fixed) |
 
 > RC2 carries the Q0468/Q0478 call-site fix (config writers that skipped the plain-http endpoint rule missed one call
-> site) across all four apps. Cells marked pending are refreshed by the release director at the end.
+> site) across all four apps. The "pending" cells of this RC1 table are superseded by section 5b.
+
+### 5b. Final release (fork cut final6.5, commit 90014b2)
+
+Daemon + CLI (sentinel-dvpnd / sentinel-dvpn): Linux amd64 7eb090ce / fe675398, arm64 81aed46a / a1437084; macOS
+amd64 7c8978c0 / 46241db6, arm64 5f5b8752 / 4da2b470; Windows amd64 8203598a / 18a95582, arm64 125200ce / 8fd1b0ea.
+Every app package below was unpacked and its embedded daemon compared with these hashes.
+
+| Product | Version | Package hashes (first 8 hex of SHA-256) | Tested on this build |
+|---|---|---|---|
+| Linux app | 0.1.21 | .deb amd64 94e34516, arm64 47ef07ec; .rpm x86_64 7de03aff, aarch64 d7f701bf; .pkg.tar.zst x64 9bcc673a, aarch64 89ee18e4; AppImage x86_64 abfc66d9, arm64 2854fa43 (SHA256SUMS 25fac16c) | S1, S3 cut90 + cut90_ks, 30-min soak PASS (section 2b), signed 2026-11-09 |
+| Android app | 0.1.4 | release apk 1e0f6be2 (libdvpnd arm64 c88fd463, x86_64 6153ff8e; SHA256SUMS fa6aef35) | S1, S3 cut90 + cut90_ks, 30-min soak PASS on the debug-type apk 2a623710 built from the same source and libraries (section 2b), signed 2026-11-09 |
+| Windows app | 0.2.0 / 0.1.0 | 0.2.0 x64 91b0aee9, arm64 7582b363; 0.1.0 x64 68d5cc20, arm64 b684c64f (embedded daemon x64 8203598a, arm64 125200ce; release SHA256SUMS 98cc28a5) | x64: S1 12/12 cells on a clean install, 30-min soak, kill switch across a restart, Q0369 PASS; S3 on a binary-swap install (section 2b); arm64 smoke only; 0.1.0 installers not run live. Signed 2026-11-09 |
+| macOS app | 0.1.3 | dmg x64 f4537894, arm64 e1063d4c; zip x64 3e612567, arm64 734eb621 (embedded daemon equal to final6.5 apart from the ad-hoc signature) | x64: S1 core 6/6, S3 cut90_ks 6/6, 30-min soak PASS; kill switch after the tunnel process is killed NOT proven (see known issues); arm64 built, not run live. Signed 2026-11-09 |
+| Node Manager | 0.2.0 (= RC1 build) | daemon + CLI final6.1 (amd64 0fbd947e / b0247dc5, arm64 a702e2b6 / 059ae244); SHA256SUMS 42cd6df6 | local 70/0/2, remote 76/0/1, live busy-answer PASS (final6.1) |
+| Plan Manager | 0.1.0 (= RC1 build) | daemon + CLI final6.1 amd64 0fbd947e / b0247dc5; SHA256SUMS 10d8f139 | e2e 102/0/0 (final6.1) |
+| Node Tester | 0.1.0 (= RC1 build) | daemon + CLI final6.1 amd64 0fbd947e / b0247dc5; SHA256SUMS 10d8f139 | e2e 117/1/1, the 1 = a harness pattern, fixed (final6.1) |
+
+> The node tools stay on final6.1: final6.1..final6.5 changes client-side code only (status/stall path, client CLI
+> commands), no node or server code, so the tested RC1 builds are the final ones.

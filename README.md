@@ -20,19 +20,21 @@ Use this repo to repeat the whole effort on a new upstream commit.
 
 ## Downloads
 
-Each product has its own repo (devnet only, builds are unsigned). **No product repo has a binary release yet** (the
-Releases pages are empty, and the RC releases of this repo carry no binaries): build from source, or use packages you
-were given. The fork cut the test results were measured on is not public. Known problems:
+Each product has its own repo and a final release (devnet only, builds are not publisher-signed). Every release
+carries `SHA256SUMS`; its notes list what was tested on that exact build. The apps run on fork cut final6.5
+(`90014b2`); the node tools keep the final6.1 build they were tested with (final6.5 changed client code only).
+Results: [`docs/04-results.md`](docs/04-results.md). Known problems:
 [`docs/known-issues-rc1.md`](docs/known-issues-rc1.md).
 
-| Product | Repo |
+| Product | Final release |
 |---|---|
-| Linux app | [`sentinel-solana-dvpn-linux`](https://github.com/Sentinel-Bluebuilder/sentinel-solana-dvpn-linux/releases/latest) |
-| Node Manager | [`sentinel-solana-node-manager`](https://github.com/Sentinel-Bluebuilder/sentinel-solana-node-manager/releases/latest) |
-| Plan Manager | [`sentinel-solana-plan-manager`](https://github.com/Sentinel-Bluebuilder/sentinel-solana-plan-manager/releases/latest) |
-| Node Tester | [`sentinel-solana-node-tester`](https://github.com/Sentinel-Bluebuilder/sentinel-solana-node-tester/releases/latest) |
-
-The Windows, macOS and Android apps follow the same naming (`sentinel-solana-dvpn-<platform>`).
+| Windows app | [`sentinel-solana-dvpn-windows` 0.2.0](https://github.com/Sentinel-Bluebuilder/sentinel-solana-dvpn-windows/releases/latest) |
+| macOS app | [`sentinel-solana-dvpn-macos` 0.1.3](https://github.com/Sentinel-Bluebuilder/sentinel-solana-dvpn-macos/releases/latest) |
+| Linux app | [`sentinel-solana-dvpn-linux` 0.1.21](https://github.com/Sentinel-Bluebuilder/sentinel-solana-dvpn-linux/releases/latest) |
+| Android app | [`sentinel-solana-dvpn-android` 0.1.4](https://github.com/Sentinel-Bluebuilder/sentinel-solana-dvpn-android/releases/latest) |
+| Node Manager | [`sentinel-solana-node-manager` 0.2.0](https://github.com/Sentinel-Bluebuilder/sentinel-solana-node-manager/releases/latest) |
+| Plan Manager | [`sentinel-solana-plan-manager` 0.1.0](https://github.com/Sentinel-Bluebuilder/sentinel-solana-plan-manager/releases/latest) |
+| Node Tester | [`sentinel-solana-node-tester` 0.1.0](https://github.com/Sentinel-Bluebuilder/sentinel-solana-node-tester/releases/latest) |
 
 ## Quick start
 
