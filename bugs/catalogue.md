@@ -152,7 +152,7 @@ One row per finding, 506 in total. Columns: id, product, OS, severity, class, st
 | Q0146 | Android app | Android | low | other | INFRA | test host <ip> unreachable (ssh port 22 timeout from laptop + build host) mid Q0067 F14 repro | see row |
 | Q0147 | Android app | Android | high | harness | HARNESS | feature-check crash section F11 'no dead tunnel after a dvpnd crash: internet works (direct)' fails whenever the kill switch is on | ded23b4 85078fb |
 | Q0148 | Daemon (dvpnd) node + client | Linux | low | other | RETIRED |  round-4 bandwidth matrix: every graded row of ROUND4-FINAL-TABLE.md ((path) becomes a C3-R4-* cell on the current build (owner: e | see row |
-| Q0149 | Linux app | Linux | low | install | NOT-A-BUG | Linux ARM64 (deb12-arm64, u2404-arm64) cells missing from linux.tsv - original connect-f3 lane | b6c8fda |
+| Q0149 | Linux app | Linux | low | install | NOT-A-BUG | Linux ARM64 (deb12-arm64, u2404-arm64) cells missing from linux.tsv - original an earlier lane lane | b6c8fda |
 | Q0150 | Daemon (dvpnd) node + client | Linux | low | other | NOT-A-BUG | builder-kb ( builder/) has 0 cells: add typecheck(path):check/names:check/live | task row (coverage(path)), closed with evidence |
 | Q0151 | Windows app | Windows | low | other | NOT-A-BUG | dvpnd byte-equal cross-build check for RC2 (original dvpnd builder lane) | f0d9588 |
 | Q0152 | Windows app | Windows | low | install | NOT-A-BUG | P3 fleet: finish test host (RC installer + wallet + claimnet) and test host (correct cell prefix + start) with fixed build-fresh,  | task row (coverage(path)), closed with evidence |
