@@ -89,6 +89,115 @@ Lessons from the pipeline:
 
 ## 5. How to run
 
+### From zero: S1 smoke on one fresh Ubuntu 24.04 box
+
+Written by a cold read: someone who had only this repo followed it on a new 2 vCPU / 8 GB Ubuntu 24.04 cloud VM and
+fixed every step that was missing. It takes about 25 minutes of work and about 8 minutes of test run. Run all of it
+as a normal user with `sudo`. Everything is devnet; the wallet you create here is a throwaway.
+
+**0. What you need before you start**
+- A Solana **devnet** funder wallet you control (a key file, kept off the box) and the Solana CLI + `spl-token` on the
+  machine that holds it (`tools/money/README.md`). You send the test wallet 0.2 SOL, 5 tDVPN and 0.05 SOL for the
+  operator key.
+- The tDVPN **mint** address of the network you test (`CBM_MINT`). It is printed by the daemon you will install:
+  `sentinel-dvpnd version` shows `mint` and `program_id`.
+- A live **node** that lists the protocols you want. List nodes with `sentinel-dvpn node search`: the `address` of an
+  entry is the node id, and `uri` carries its IP. Set `NODE4_ID` / `NODE4_IP` to them (the names are historic; any
+  node works with `--node node-4`).
+- The binaries. The public product repos do **not** carry binary releases yet, and the fork cut the results were
+  measured on is not public either. Use the Linux app package you built or were given
+  (`devnet-dvpn_<version>_amd64.deb`; it ships `sentinel-dvpnd` and the protocol tools) and build the `sentinel-dvpn`
+  command-line client from upstream `sentinel-official/sentinel-solana` (`sentinel-dvpn/`, `make build`, Go 1.27.3).
+  A run on a pure upstream build can show reds that `docs/known-issues-rc1.md` lists for it.
+
+**1. Packages**
+```sh
+sudo apt-get update                                   # a fresh image has no package lists; the .deb's dependencies fail without this
+sudo apt-get install -y ./devnet-dvpn_*_amd64.deb tcpdump dnsutils curl jq
+sudo devnet-dvpn daemon repair-drivers --yes          # AmneziaWG tools + kernel module (builds a DKMS module, ~3 min)
+devnet-dvpn daemon drivers                            # every line must say present/ok
+```
+
+**2. Binaries in the harness folder** (`CBM_DIR`, default `~/cb33`, owned by you: the harness writes its daemon log there)
+```sh
+mkdir -p ~/cb33 && cp /opt/devnet-dvpn/resources/resources/bin/sentinel-dvpnd ~/cb33/ && cp <your built>/sentinel-dvpn ~/cb33/
+chmod +x ~/cb33/sentinel-dvpn ~/cb33/sentinel-dvpnd
+~/cb33/sentinel-dvpnd version                         # note mint + program_id
+```
+The protocol tools (`hysteria2`, `v2ray`, `xray`) must sit in a **root-owned tree nobody else can write**. The daemon
+refuses them from the package's `/opt` folder ("binary is replaceable by an untrusted account") and 9 of the 12 S1
+cells go red on that alone:
+```sh
+sudo mkdir -p /usr/local/lib/devnet-dvpn/bin
+for n in hysteria2 v2ray xray; do sudo cp -a /opt/devnet-dvpn/resources/resources/bin/$n /usr/local/lib/devnet-dvpn/bin/; done
+sudo chown -R root:root /usr/local/lib/devnet-dvpn && sudo chmod -R go-w /usr/local/lib/devnet-dvpn
+B=/usr/local/lib/devnet-dvpn/bin
+sudo mkdir -p /etc/sentinel-dvpn
+echo "PATH=$B/hysteria2:$B/v2ray:$B/xray:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" | sudo tee /etc/sentinel-dvpn/c1.env
+```
+(The adapter reads the daemon's `PATH` from `/etc/sentinel-dvpn/<instance>.env`.)
+
+**3. A client instance and its wallet** (the matrix defaults to instance `c1` and CLI home `~/.sentinel-dvpn`; the app's
+own instance `c0` is a different thing). A headless box cannot use the app's wallet commands (they need a desktop
+keyring), so create the owner key with the command-line client:
+```sh
+cd ~/cb33
+./sentinel-dvpn key new owner --unencrypted           # prints {"name":"owner","public_key":"<OWNER>",...}
+sudo ./sentinel-dvpnd init --instance c1 --owner <OWNER> --plain-key   # prints the operator public key <OPERATOR>
+```
+`<OWNER>` is the base58 `public_key` value, not the whole JSON line. Back both key files up somewhere safe now
+(`~/.sentinel-dvpn/keys/owner.json`, `/var/lib/sentinel-dvpn/c1/keys/operator.json`): you need the owner key to take the
+money back at the end.
+
+**4. Fund it and approve spending** (7 s between transactions)
+```sh
+# on the machine with the funder key; wallet list line format: <pubkey> <min_sol> <target_sol> <min_tdvpn> <target_tdvpn> <label>
+#   <OWNER> 0.1 0.2 1 5 owner        <OPERATOR> 0.03 0.05 0 0 operator
+APPLY=1 tools/money/sol-topup.sh
+# on the box, as the owner:
+./sentinel-dvpn wallet create-token-account --key.name owner
+sleep 7; ./sentinel-dvpn wallet approve-delegate --amount-base-units unlimited --key.name owner
+sleep 7; ./sentinel-dvpn grant open-grant --key.name owner --grantee <OPERATOR> --target 11111111111111111111111111111111 \
+  --permissions 788529152 --expires-at 0 --allowance 18446744073709551615
+sudo ./sentinel-dvpnd doctor --instance c1            # fix anything with severity "error"; warnings about a protocol tool mean step 2 is incomplete
+```
+`doctor` prints the exact command for every missing grant or approval; when in doubt, run it and do what it says.
+
+**5. Run** (detached: while a kill-switch cell is active the box can stall your ssh session for up to a minute, and
+a session that dies would kill a foreground run. The harness exempts the machine you ssh in from, so the session
+comes back between cells)
+```sh
+git clone https://github.com/Sentinel-Bluebuilder/sentinel-solana-dvpn-testing-tools && cd sentinel-solana-dvpn-testing-tools/tools/cb33-matrix
+export INSTANCE=c1 CBM_DIR=$HOME/cb33 CBM_MINT=<mint> NODE4_ID=<node address> NODE4_IP=<node ip>
+bash cb33-matrix.sh --platform linux --selftest --out ~/cbm-self        # no node needed; exit code 0 and no MISSED line in ~/cbm-self/selftest.txt
+setsid nohup bash cb33-matrix.sh --platform linux --side B --node node-4 --suites S1 --out ~/cbm-s1 > ~/s1.log 2>&1 < /dev/null &
+tail -f ~/s1.log                                                         # one "-- S1 core <protocol>" line per cell
+```
+Without a lane file the daemon uses the public devnet RPC, which is slower and rate-limited (the cold read ran this
+way). If you have your own endpoint, put `HELIUS_RPC_URL=...` (and optionally `HELIUS_WSS_URL=...`) in an env file and
+point `CBM_RPC_LANE_FILE` at it; the matrix writes it into the instance's `[rpc]` at the start of the run.
+
+**6. Read the result.** S1 is 12 cells: `core` (kill switch off) and `core_ks` (on) for wireguard, amneziawg, openvpn,
+hysteria2, v2ray, xray; about 8 minutes on 2 vCPU. The verdict line is `== suite S1: ... cells: 12 total, N FAIL, M
+PASS`. Details: `~/cbm-s1/results.tsv` (one row per check; filter the `FAIL` rows) and `~/cbm-s1/S1/<scenario>-<protocol>/`
+(`scenario.log`, `daemon.log`, `cli.txt`). Seen on the RC2 Linux package against a final6.1 node, after the setup was
+right, over three runs of the same node: hysteria2, v2ray, xray and amneziawg passed both cells every time; wireguard
+`core` failed once and passed on the re-run; openvpn `core` passed once and failed once; openvpn `core_ks` failed once
+and passed once. So **one run can show 1-2 red cells that do not repeat**; re-run a red cell alone with
+`--protocol <p>` before calling it a finding. The reds that came and went:
+- `rpc-direct` (1 RPC packet on the NIC while active, "pooled pre-tunnel connection"): upstream #6 (`docs/05-upstream.md`).
+  It lands on one wireguard or openvpn cell in a run and not on the next.
+- one `status` LIE sample on openvpn `core_ks` (state `active` with the direct IP): the same finding the Fedora S1 row
+  in `docs/04-results.md` mentions; it did not repeat on the re-run.
+Anything else red (`words`, `leak`, a `connect failed` line) is a setup problem first: read `scenario.log`. A first run
+with only 4 of 12 passing and `binary is replaceable by an untrusted account` in the logs is step 2's protocol-tool
+folder.
+
+**7. Take the money back.** Channels the run opened refund after a wait: start-close, then close 7200 s later, then
+withdraw (`tools/money/README.md`, "The reclaim pipeline"). Then `tools/money/money.sh sweep` (dry run first, then
+`--apply`) returns SOL and tDVPN to the funder, keeping 0.05 SOL + 1 tDVPN. Only then delete the VM; the keys from step 3
+are the only way to the money.
+
 ### Ubuntu (matrix wrapper)
 - `tlx-distro-matrix.sh [suites] [node]` wraps `cb33-matrix` with `PLATFORM=linux`.
   - `CBM_ARGS='--scenario X'` runs one cell; `CBM_PROTOCOLS='amneziawg hysteria2'` narrows the protocols.

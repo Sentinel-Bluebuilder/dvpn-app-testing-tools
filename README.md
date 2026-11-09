@@ -20,8 +20,10 @@ Use this repo to repeat the whole effort on a new upstream commit.
 
 ## Downloads
 
-Each product has its own repo with installers and `SHA256SUMS` on its Releases page (devnet only, builds are unsigned).
-Known problems: [`docs/known-issues-rc1.md`](docs/known-issues-rc1.md).
+Each product has its own repo (devnet only, builds are unsigned). **No product repo has a binary release yet** (the
+Releases pages are empty, and the RC releases of this repo carry no binaries): build from source, or use packages you
+were given. The fork cut the test results were measured on is not public. Known problems:
+[`docs/known-issues-rc1.md`](docs/known-issues-rc1.md).
 
 | Product | Repo |
 |---|---|
@@ -32,17 +34,21 @@ Known problems: [`docs/known-issues-rc1.md`](docs/known-issues-rc1.md).
 
 The Windows, macOS and Android apps follow the same naming (`sentinel-solana-dvpn-<platform>`).
 
-## Quick start (10 minutes)
+## Quick start
 
 1. Read `docs/00-overview.md` for the architecture: upstream vs fork, the two reference nodes, the RPC lanes.
 2. Read `docs/01-test-method.md` for the five checks that run in every scenario and suites S0–S13.
-3. Run the harness on one Linux machine against a node you control:
+3. Run the harness on one Linux machine against a live devnet node. The machine needs the Linux app package, a client
+   instance with a funded wallet, and a node id and address. The exact steps (about 25 minutes the first time) are
+   `docs/02-platforms/linux.md` §5, "From zero". Once those exist:
    ```
    cd tools/cb33-matrix
-   bash cb33-matrix.sh --platform linux --selftest          # every built-in check must FAIL on its planted fault
-   bash cb33-matrix.sh --platform linux --side B --node <your-node> --suites S1 --out ~/cbm-first
+   export INSTANCE=c1 CBM_DIR=$HOME/cb33 CBM_MINT=<tDVPN mint> NODE4_ID=<node address> NODE4_IP=<node ip>
+   bash cb33-matrix.sh --platform linux --selftest          # every built-in check must FAIL on its planted fault; needs no node
+   bash cb33-matrix.sh --platform linux --side B --node node-4 --suites S1 --out ~/cbm-first
    ```
-   The node ids, RPC lane and wallet come from env vars; `tools/cb33-matrix/README.md` lists every setting.
+   `--node node-4` means "the node named by `NODE4_ID` / `NODE4_IP`" (any node; the name is historic).
+   `tools/cb33-matrix/README.md` lists every setting.
 4. For the whole effort, follow `docs/09-runbook.md` step by step.
 
 ## Map

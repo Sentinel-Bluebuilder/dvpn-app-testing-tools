@@ -27,7 +27,10 @@ export LEDGER=/path/outside/repo/ledger.md
 export SOLANA_RPC_URLS=<your devnet RPC>,https://api.devnet.solana.com
 # sol-topup only, on the machine that holds the funder key:
 export FUNDER_KEYFILE=/path/outside/repo/funder.json
+export SOLANA_BIN=/path/to/solana/bin   # folder with solana, solana-keygen and spl-token (or have them on PATH)
 ```
+`sol-topup.sh` is a dry run until you set `APPLY=1`. It works on a wallet that has never been funded (no token account
+yet): it reads such a wallet as 0 SOL / 0 tDVPN. Keep `RESERVE_SOL` at its default unless the funder is small.
 
 ## The reclaim pipeline
 

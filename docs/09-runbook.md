@@ -51,6 +51,12 @@ Follow these steps in order. Each step names its owner role (`docs/08-ai-fleet.m
 
 ## Step 5 — Full run (platform testers)
 
+**First time on a machine? Do the smoke run before anything else.** One box, one suite, about 25 minutes of setup and
+8 minutes of run: `docs/02-platforms/linux.md` §5, "From zero: S1 smoke on one fresh Ubuntu 24.04 box" (it needs a
+funded devnet wallet, a live node and the three binaries it lists). If S1 does not run cleanly there, a full run will
+not either. A first S1 can show 1-2 red cells that do not repeat; re-run a red cell alone (`--protocol <p>`) before
+filing it.
+
 `tools/cb33-matrix/cb33-matrix.sh` with the platform adapter (`plat/<os>.sh`). Suites S0–S13
 (`docs/01-test-method.md`). The five built-in checks run during every scenario.
 

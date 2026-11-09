@@ -40,12 +40,17 @@ plat_hosts_release() { grep -qF "$HOSTS_TAG" /etc/hosts 2>/dev/null && sudo sed 
 
 plat_init() {
   plat_hosts_pin
+  # --selftest plants faults locally and never talks to a node: it needs no node id or address, so it runs on a bare box.
+  if [ "${SELFTEST:-0}" = 1 ] && [ -z "${NODE_IP:-}${NODE3_IP:-}${NODE4_IP:-}" ]; then
+    NODE_ID=selftest-node; NODE_IP=192.0.2.1
+  else
   case $NODE in
     # node-3 wg seed after FS36's 26de5240 swap (11-07 17:57Z), from chain (`node show`); lib/nodes.sh reads the rest.
     node-3) NODE_ID=${NODE3_ID:?set NODE3_ID (node-3 pubkey)}; NODE_IP=${NODE3_IP:?set NODE3_IP} ;;
     node-4) NODE_ID=${NODE4_ID:?set NODE4_ID (node-4 pubkey)}; NODE_IP=${NODE4_IP:?set NODE4_IP} ;;
     *) NODE_ID=$NODE; NODE_IP=${NODE_IP:?set NODE_IP for a custom node} ;;
   esac
+  fi
   NODE_EGRESS=${NODE_EGRESS:-$NODE_IP}
   PHYS_IF=$(ip -4 route show default | awk '{print $5; exit}')
   PHYS_ADDRS=$(ip -o addr show dev "$PHYS_IF" scope global | awk '{split($4, a, "/"); print a[1]}' | tr '\n' ' ')
@@ -541,7 +546,9 @@ reset_nft() { echo "$(date -u +%T) ${SUITE:-}/${SCENARIO:-}/${PROTO:-} $1: $(sud
 # ours 5200, theirs 5198/5199). A main-table /32 wins anyway, because the tunnels' own `lookup main
 # suppress_prefixlength 0` only skips main's default route, and openvpn's def1 /1 routes are less specific.
 # Added by plat_init, re-ensured by plat_reset, removed by deadman_stop at the very end (never between scenarios).
-CBM_MGMT_IPS=${CBM_MGMT_IPS:?set CBM_MGMT_IPS}   # ctl-1; add more space-separated
+# Optional: the machine(s) you drive the run from, space separated. The ssh client address ($SSH_CLIENT) is added
+# automatically, so on a box you ssh into this can stay empty. Run on the box itself (no ssh) and it is not needed.
+CBM_MGMT_IPS=${CBM_MGMT_IPS:-}
 plat_mgmt_exempt() {
   local ip; [ -n "${GATEWAY_IP:-}" ] && [ -n "${PHYS_IF:-}" ] || return 0
   for ip in $CBM_MGMT_IPS ${CONTROL_IP:-}; do
@@ -740,7 +747,9 @@ plat_delegate_approve() { # $1 = base units or "unlimited" (default unlimited); 
     --amount-base-units "${1:-unlimited}" --key.name operator 2>&1
 }
 plat_delegate_read() { # echo the wallet's program-delegate allowance in base units (or "unlimited"); empty on failure
-  local cfg="$CBM_PKG_HOME/config.toml" rpc owner mint have
+  # The instance the matrix is RUNNING ($CFG, default /var/lib/sentinel-dvpn/$INSTANCE/config.toml), not the packaged
+  # c0: with any other INSTANCE the old path found no config and every cell was blinded "delegate not approved".
+  local cfg="${CBM_DELEGATE_CFG:-$CFG}" rpc owner mint have
   # Both come from the daemon's own config.toml (single-quoted TOML — strip ' or "); owner is a ROOT-level key
   # (before the first [section]), rpc.url lives under [rpc]. (wallet balance is avoided: its keyring sudo wants a tty.)
   rpc=${CBM_RPC_URL:-${HELIUS_RPC_URL:-$(sudo sed -nE '/^\[rpc\]/,/^\[/{ s/^[[:space:]]*url[[:space:]]*=[[:space:]]*(.+)$/\1/p }' "$cfg" 2>/dev/null | head -1 | sed -E "s/^['\"]//; s/['\"][[:space:]]*$//")}}

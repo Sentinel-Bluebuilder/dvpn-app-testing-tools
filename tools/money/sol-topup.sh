@@ -33,8 +33,10 @@ case "$URL" in *devnet*) ;; *) echo "devnet only: SOLANA_RPC_URL must be a devne
 [ -r "$FUNDER_KEYFILE" ] || { echo "cannot read FUNDER_KEYFILE" >&2; exit 2; }
 FUNDER=$("${SOLANA_BIN:+$SOLANA_BIN/}solana-keygen" pubkey "$FUNDER_KEYFILE")
 
-sol_of() { "$SOLANA" balance -u "$URL" "$1" 2>/dev/null | awk 'NR==1{print $1+0}'; }
-tok_of() { "$SPL" balance -u "$URL" --program-2022 --owner "$1" "$MINT" 2>/dev/null | awk 'NR==1{print $1+0}'; }
+# `|| true`: a wallet that was never funded has no token account, and spl-token exits non-zero for it. Under
+# `set -e -o pipefail` that killed the script right after the header, before the first wallet. No output = 0.
+sol_of() { { "$SOLANA" balance -u "$URL" "$1" 2>/dev/null || true; } | awk 'NR==1{print $1+0}'; }
+tok_of() { { "$SPL" balance -u "$URL" --program-2022 --owner "$1" "$MINT" 2>/dev/null || true; } | awk 'NR==1{print $1+0}'; }
 lt() { awk -v a="$1" -v b="$2" 'BEGIN{exit !(a<b)}'; }
 
 fund_sol=$(sol_of "$FUNDER"); fund_sol=${fund_sol:-0}

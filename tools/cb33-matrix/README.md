@@ -14,7 +14,11 @@ bash cb33-matrix.sh --platform linux --selftest      # phase 4: every built-in c
 ```
 
 - `--side A|B`: A = pure cb33 build, B = fork-cb33-1. The script only records it; you install the build.
-- `--node`: `node-3` (pure 26de5240) or `node-4` (fork). Client fixes run A and B against node-3 (PLAN §1c).
+- `--node`: `node-3` (pure 26de5240) or `node-4` (fork). Client fixes run A and B against node-3 (PLAN §1c). On Linux a
+  node name means "the node in `NODE3_ID`/`NODE3_IP` or `NODE4_ID`/`NODE4_IP`": any live node works, so for your own
+  node set `NODE4_ID` (its pubkey = the `address` in `sentinel-dvpn node search`) and `NODE4_IP`, and pass `--node node-4`.
+  Also needed: `CBM_MINT` (tDVPN mint), `INSTANCE` (default `c1`) and `CBM_DIR` (the folder with `sentinel-dvpn` +
+  `sentinel-dvpnd`). `--selftest` needs none of the node settings.
 - `--channel <id>`: reuse one channel for the whole run (no channel per cycle). Without it the first connect opens one
   with `--new-channel` and every later connect reuses it.
 - Freeze is lifted for cb33 clients: close/settle allowed, 7 s between txs per wallet (`tx_gap` in lib/common.sh).
@@ -23,6 +27,18 @@ Scenario list entries are `fn:ks` or `fn:ks:once` (once = protocol-independent, 
 
 Output: `<out>/results.tsv` = `time  suite  scenario  protocol  check  PASS|FAIL|SKIP  detail`, plus per-scenario
 logs in `<out>/<suite>/<scenario>-<protocol>/`. A scenario row FAILs if any check FAILs.
+
+### Reading a run
+- Run it detached (`setsid nohup bash cb33-matrix.sh ... > run.log 2>&1 < /dev/null &`) and `tail -f` the log: one
+  `-- <suite> <scenario> <protocol>` line per cell, then `<suite> <scenario> <protocol>: PASS|FAIL|BLIND`.
+  A `kill_switch on` cell can stall your ssh session for up to a minute; it comes back (the machine you ssh in from is
+  exempted from the block).
+- The verdict is the line `== suite S1: ... cells: N total, F FAIL, P PASS`. S1 is 12 cells and takes about 8 minutes
+  on 2 vCPU. List the red rows with `grep -P '\tFAIL\t' <out>/results.tsv | cut -f3-7`.
+- `BLIND` means the cell was not judged (for example the owner's token delegate is not approved): fix the setup, not
+  the product. Zero results and 12 BLIND cells in about 2 seconds each = a setup problem.
+- A cell that fails alone and not again on `--protocol <p>` is noise, not a finding. A cell that fails every time with
+  the same words in `scenario.log` is.
 
 ## Layout
 
