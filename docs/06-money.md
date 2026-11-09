@@ -80,7 +80,7 @@ returned).
 | 05:58Z | 475 | 105 closed by the next read, 308 timers started, 62 not started, 23 held for final passes |
 | post-final | 150 channels | e.g. one Windows lane 44 ready; Linux lanes waiting on their final passes; Mac stream channels closed; funder rows with DIR |
 
-| final (B1) | PENDING | totals returned to the funder per wallet, filled in after the last sweep |
+| final (B1) | IN PROGRESS | every lane wallet is back at its reserve (0.05 SOL + 1 tDVPN) except one Windows test wallet with 2 channels that can only close after 22:10 UTC on 2026-11-09; final totals are added after that sweep |
 
 ## 6. What the books found about billing
 
