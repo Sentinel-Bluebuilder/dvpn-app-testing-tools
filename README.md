@@ -18,6 +18,20 @@ Use this repo to repeat the whole effort on a new upstream commit.
 | Plan Manager | Web + CLI | Creates subscription plans and links nodes to them |
 | Node Tester | Web + CLI | Tests nodes end to end with paid sessions |
 
+## Downloads
+
+Each product has its own repo with installers and `SHA256SUMS` on its Releases page (devnet only, builds are unsigned).
+Known problems: [`docs/known-issues-rc1.md`](docs/known-issues-rc1.md).
+
+| Product | Repo |
+|---|---|
+| Linux app | [`sentinel-solana-dvpn-linux`](https://github.com/Sentinel-Bluebuilder/sentinel-solana-dvpn-linux/releases/latest) |
+| Node Manager | [`sentinel-solana-node-manager`](https://github.com/Sentinel-Bluebuilder/sentinel-solana-node-manager/releases/latest) |
+| Plan Manager | [`sentinel-solana-plan-manager`](https://github.com/Sentinel-Bluebuilder/sentinel-solana-plan-manager/releases/latest) |
+| Node Tester | [`sentinel-solana-node-tester`](https://github.com/Sentinel-Bluebuilder/sentinel-solana-node-tester/releases/latest) |
+
+The Windows, macOS and Android apps follow the same naming (`sentinel-solana-dvpn-<platform>`).
+
 ## Quick start (10 minutes)
 
 1. Read `docs/00-overview.md` for the architecture: upstream vs fork, the two reference nodes, the RPC lanes.
