@@ -116,6 +116,14 @@ rules will decide it. The macOS arm64 build was not run live.
 crash). 0 of 14 stops hung (about 5 s each), then 0 of 5 on the final run. The one real effect found is by design:
 after a crash, the left-over tunnel black-holes egress until the service starts again.
 
+## 3c. Node Manager 0.3.0 (installers)
+
+| Area | What a user may see | State |
+|---|---|---|
+| Wallet, send SOL | Sending the whole SOL balance fails with "insufficient funds for rent": the wallet keeps its token account, which needs about 0.002 SOL. Send a little less than the balance. | A "Max" button that leaves the rent is planned for the next release. |
+| Remote nodes after a restart | SSH passwords and keys are never stored, so after the app restarts a remote node waits on its page for **Reconnect** (shown as a banner). Removal and changes resume after it. | By design. |
+| Windows arm64, macOS arm64 | Checked as packages (CPU type of every native module, contents), not run on a device. | No test hardware. |
+
 ## 4. Test-setup only (no user impact)
 
 - The macOS test machine's own safety job stopped the service during long cuts. It is disarmed for those tests now.
