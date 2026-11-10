@@ -1,6 +1,6 @@
 # 06 — Money: funder, wallets, top-ups, reclaim, books
 
-Written by #1b from its handoff, the books and the reclaim lists; DIR adds the funder-side details it owns. Cells marked PENDING fill in at the finish.
+Written by #1b from its handoff, the books and the reclaim lists; DIR adds the funder-side details it owns. All cells are final as of 2026-11-10.
 Everything here is devnet: tDVPN (6 decimals) and devnet SOL. No wallet keys, gate URLs or VM addresses appear here.
 
 ## 1. The money in one picture
