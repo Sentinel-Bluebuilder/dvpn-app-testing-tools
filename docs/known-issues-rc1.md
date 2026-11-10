@@ -121,6 +121,7 @@ after a crash, the left-over tunnel black-holes egress until the service starts 
 | Area | What a user may see | State |
 |---|---|---|
 | Wallet, send SOL | Sending the whole SOL balance fails with "insufficient funds for rent": the wallet keeps its token account, which needs about 0.002 SOL. Send a little less than the balance. | A "Max" button that leaves the rent is planned for the next release. |
+| Test node refund | Each in-app **Test node** pays about 0.2 tDVPN into a test channel. Getting it back takes two runs of `nodes.sweepTestChannels` (CLI) about 2 hours apart, and the sweep needs Docker on this computer, so a user who only hosts nodes over SSH cannot reclaim it yet. | Planned for the next release: start the close right after the test, run the sweep through the node's server, and add a button. |
 | Remote nodes after a restart | SSH passwords and keys are never stored, so after the app restarts a remote node waits on its page for **Reconnect** (shown as a banner). Removal and changes resume after it. | By design. |
 | Windows arm64, macOS arm64 | Checked as packages (CPU type of every native module, contents), not run on a device. | No test hardware. |
 
