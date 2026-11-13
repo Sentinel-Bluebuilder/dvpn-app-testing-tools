@@ -125,6 +125,15 @@ after a crash, the left-over tunnel black-holes egress until the service starts 
 | Remote nodes after a restart | SSH passwords and keys are never stored, so after the app restarts a remote node waits on its page for **Reconnect** (shown as a banner). Removal and changes resume after it. | By design. |
 | Windows arm64, macOS arm64 | Checked as packages (CPU type of every native module, contents), not run on a device. | No test hardware. |
 
+## 3d. Node Manager 0.3.1-rc.1 (release candidate)
+
+| Area | What a user may see | State |
+|---|---|---|
+| Remote nodes after a restart | As in 0.3.0: a server node shows "Not connected" until **Reconnect**; its chain actions wait for it. | By design; a Reconnect prompt at launch is planned. |
+| HNS Resolver | Apps that use their own encrypted DNS (DNS over HTTPS) skip the node's resolver, so Handshake names do not open in them. The first sync downloads about 210 MB; the node needs outbound TCP to Handshake peers (the page says so when it cannot reach them). | By design / documented. |
+| Log noise | While a node page is open the app runs one short-lived helper container per chain read, and the node log records each status read. Two app log lines that repeated on every check are fixed for the next build. | Planned for the next release. |
+| Windows arm64, macOS arm64 | Checked as packages, not run on a device. | No test hardware. |
+
 ## 4. Test-setup only (no user impact)
 
 - The macOS test machine's own safety job stopped the service during long cuts. It is disarmed for those tests now.
